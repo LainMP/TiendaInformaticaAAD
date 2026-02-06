@@ -23,14 +23,29 @@ public class ProductoDAO {
         }
     }
 
-    public int updateProd(int id, String newName, double newPrice) {
+    //necesario para encontrar el producto por id y actualizarlo.
+    public Producto findById(int id) {
+        Transaction tx = null;
+        Producto producto = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            producto = (Producto) session.find(Producto.class, id);
+            tx.commit();
+            return producto;
+        } catch (Exception ex) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            return null;
+        }
+    }
+
+    public int updateProd(Producto prod) {//Se le pasa el objeto producto para que haga el merge en la base de datos en vez de los parametros sueltos
         Transaction tx = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
-            Producto prod = session.find(Producto.class, id);
             if (prod != null) {
-                prod.setNombre(newName);
-                prod.setPrecio(newPrice);
+                session.merge(prod);
                 tx.commit();
                 return 1;
             } else {

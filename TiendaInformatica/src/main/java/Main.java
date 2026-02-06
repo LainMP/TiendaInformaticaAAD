@@ -31,7 +31,7 @@ public class Main {
             opcion = Integer.parseInt(sc.nextLine());
             switch(opcion){
                 case 1 -> fabricanteOptions();
-                case 2 -> menuProducto();
+                case 2 -> productOptions();
                 case 0 -> System.out.println("Cerrando el programa...");
                 default -> System.out.println("Opcion no valida.\n");
             }
@@ -68,7 +68,7 @@ public class Main {
         sb.append("2. Buscar el Id por NOMBRE.\n");
         sb.append("3. Buscar por NOMBRE de PRODUCTO.\n");
         sb.append("4. Buscar por NOMBRE de FABRICANTE y obtener productos.\n");
-        sb.append("0.Salir.\n");
+        sb.append("0. Volver.\n");
         System.out.println(sb);
     }
 
@@ -89,14 +89,13 @@ public class Main {
         sb.append("----------Fabricantes-------------\n");
         sb.append("1. Ver todos. \n");
         sb.append("2. Buscar el Id por NOMBRE.\n");
-        sb.append("3. Buscar por NOMBRE de FABRICANTE.\n");
-        sb.append("4. Buscar por NOMBRE de PRODUCTO y obtener FABRICANTES.\n");
-        sb.append("0.Salir.\n");
+        sb.append("3. Buscar productos menores de \"X\" precio.\n");
+        sb.append("0. Volver.\n");
         System.out.println(sb);
     }
 
     //----------------------NAVEGACION PRODUCTOS----------------------------
-    private void productOptions(){
+    private static void productOptions(){
         int opcion;
         do {
             menuProducto();
@@ -120,8 +119,7 @@ public class Main {
             switch(opcion){
                 case 1 -> mostrarProds();
                 case 2 -> prodByName();
-                case 3 -> prodByFab();
-                case 4 -> fabsByProd();
+                case 3 -> filtrarProds();
                 default -> System.out.println("Opcion no valida.\n");
             }
         } while (opcion != 0);
@@ -208,14 +206,11 @@ public class Main {
         }
         try {
             List<Fabricante> fab = fabricanteDAO.searchByProduct(name);
-            Fabricante fabricante = null;
-            for (Fabricante f : fab) {
-                fabricante = f;
-            }
-            if (fabricante != null) {
-                System.out.println("El fabricante es: " + fabricante.getCod() + " - " + fabricante.getNombre());
-            } else  {
-                System.out.println("Fabricante no encontrado");
+            if(fab.size()>0){
+                System.out.println(fab.size() +  " Fabricantes asociados para el producto: " + name);
+                for (Fabricante fabricante : fab) {
+                    System.out.println(fabricante.getCod() + " - " + fabricante.getNombre());
+                }
             }
         } catch (Exception e) {
             System.out.println("Error al intentar buscar el Fabricante.");
@@ -306,7 +301,7 @@ public class Main {
         }
     };
 
-    //----------------------FUNCIONES DE FABRICANTES----------------------------
+    //----------------------FUNCIONES DE PRODUCTOS----------------------------
     /**
      * REGISTRAR PRODUCTO
      * */
@@ -332,11 +327,14 @@ public class Main {
         try {
             Producto producto = new Producto();
             List<Fabricante> fab = fabricanteDAO.searchByName(fabName);
-            if (fab == null) {
+            if (fab.isEmpty()) { // Aquí estaba comprobando si fab era null, List devuelve listas vacias si no encuentra con que llenarlas.
                 Fabricante newFab = new Fabricante(fabName);
                 fabricanteDAO.guardar(newFab);
                 System.out.println("Fabricante creado correctamente.");
                 producto.setFabricante(newFab);
+            } else { //Faltaba el else para asignar el fabricante que ya existe.
+                Fabricante fabricante = fab.get(0);
+                producto.setFabricante(fabricante);
             }
             producto.setNombre(nombre);
             producto.setPrecio(precio);
@@ -351,8 +349,7 @@ public class Main {
      * MODIFICAR NOMBRE O PRECIO DE PRODUCTO
      * */
     private static void actualizarProd() {
-        String nombre = "";
-        double precio = 0;
+
         List<Producto> listaProds = productoDAO.showAll();
         System.out.println("----------Lista de Productos----------");
         for (Producto producto : listaProds) {
@@ -360,19 +357,26 @@ public class Main {
         }
         System.out.println("Introduce el id del Producto a actualizar: ");
         int id = Integer.parseInt(sc.nextLine());
-        Producto producto = listaProds.get(id);
+        Producto producto = productoDAO.findById(id);
+        if (producto == null) {
+            System.out.println("Producto no encontrado");
+            return;
+        }
         System.out.println("Introduce el nuevo nombre del Producto a actualizar (Pulsa intro para omitir): ");
         String newName = sc.nextLine();
         System.out.println("Introduce el nuevo precio del Producto a actualizar (Pulsa intro para omitir): ");
         String newPrecio = sc.nextLine();
         if (!newName.isEmpty()) {
-            nombre = newName;
+            producto.setNombre(newName);
         }
         if (!newPrecio.isEmpty()) {
-            precio = Double.parseDouble(newPrecio);
+            producto.setPrecio(Double.parseDouble(newPrecio));
         }
         try {
-            productoDAO.updateProd(id, nombre, precio);
+            int exito = productoDAO.updateProd(producto);
+            if(exito == 1) {
+                System.out.println("Producto actualizado correctamente.");
+            }
         } catch (Exception e) {
             System.out.println("Error al intentar actualizar producto.");
         }
@@ -403,7 +407,8 @@ public class Main {
         try {
             List<Producto> listaProds = productoDAO.showAll();
             for (Producto producto : listaProds) {
-                System.out.println("- " + producto.getCod() + " - Nombre: " + producto.getNombre());
+                Fabricante f = producto.getFabricante();
+                System.out.println("- " + producto.getCod() + " - Nombre: " + producto.getNombre() + " - " + producto.getPrecio() + " - " + f.getNombre());
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -413,6 +418,7 @@ public class Main {
     /**
      * MOSTRAR ID PRODUCTOS POR NOMBRE
      * */
+
     private static void prodByName() {
         System.out.println("Introduce el nombre del Producto: ");
         String nombre = sc.nextLine().trim().toLowerCase();
@@ -422,23 +428,51 @@ public class Main {
         }
         try {
             List<Producto> listaProds = productoDAO.searchByName(nombre);
-
-            for (Producto producto : listaProds) {
-
+            if  (listaProds != null) {
+                for (Producto producto : listaProds) {
+                    System.out.println(producto.getCod() + " - " + producto.getNombre() + " - " + producto.getPrecio());
+                }
+            } else {
+                System.out.println("No existe el producto .");
             }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
-    //-----TODO _(HASTA AQUÍ ME CUADRA)
     /**
-     * MOSTRAR PRODUCTOS DE UN FABRICANTE
-     * */
-    private static void prodByFab() {}
+     * FILTRAR POR MENORES A "X" PRECIO
+     **/
+    private static void filtrarProds() {
+        System.out.println("Accediendo a productos. Porfavor Espere...");
+        List<Producto> listaProds = productoDAO.showAll();
+        System.out.println("Introduce el precio maximo del Producto: ");
+        String precioMax = sc.nextLine().trim();
+        if (precioMax.isEmpty()) {
+            System.out.println("El precio maximo no puede estar vacio.");
+            return;
+        }
+        double max = 0;
+        try {
+            max = Double.parseDouble(precioMax);
+        } catch (Exception ex) {
+            System.out.println("Error al establecer el filtro del precio.");
+            return;
+        }
+        listaProds.sort((p1, p2) -> Double.compare(p1.getPrecio(), p2.getPrecio()));
 
-    /**
-     * MOSTRAR LOS FABRICANTES DE UN PRODUCTO
-     * */
-    private static void fabsByProd() {}
+        int contador = 0;
+        for (Producto producto : listaProds) {
+            if (producto.getPrecio() <= max) {
+                Fabricante f = producto.getFabricante();
+                System.out.println("- " + producto.getCod() + " - " + producto.getNombre() + " - " + producto.getPrecio() + "€ - " + f.getNombre());
+                contador++;
+            }
+        }
+        System.out.println(contador + " Productos por debajo de " + precioMax + " euros.");
+    }
+
 }
 
 
