@@ -65,8 +65,8 @@ public class FabricanteDAO {
 
     public List<Producto> getProductsByFab(String name) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            return session.createQuery("SELECT p FROM Producto p WHERE p.fabricante.nombre = :name", Producto.class)
-                    .setParameter("name", name)
+            return session.createQuery("SELECT p FROM Producto p WHERE LOWER(p.fabricante.nombre) = :name", Producto.class)
+                    .setParameter("name", name.toLowerCase())
                     .getResultList();
         }
     }
@@ -74,9 +74,9 @@ public class FabricanteDAO {
     public List<Fabricante> searchByProduct(String name) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             return session.createQuery(
-                    "SELECT f FROM Fabricante f JOIN f.listaProductos p WHERE p.nombre = :name",
+                    "SELECT f FROM Fabricante f JOIN f.listaProductos p WHERE LOWER(p.nombre) = :name",
                         Fabricante.class)
-                    .setParameter("name", name)
+                    .setParameter("name", name.toLowerCase())
                     .getResultList();
         }
     }
@@ -87,9 +87,9 @@ public class FabricanteDAO {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
             List<Fabricante> listaF = session.createQuery(
-                    "SELECT f FROM Fabricante f WHERE f.nombre = :name",
+                    "SELECT f FROM Fabricante f WHERE LOWER(f.nombre) = :name",
                         Fabricante.class)
-                        .setParameter("name", name)
+                        .setParameter("name", name.toLowerCase())
                         .getResultList();
             tx.commit();
             return  listaF;

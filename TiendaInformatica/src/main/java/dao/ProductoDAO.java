@@ -94,9 +94,9 @@ public class ProductoDAO {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
             List<Producto> listaProd = session.createQuery(
-                    "SELECT p FROM Producto p WHERE p.nombre = :name",
+                    "SELECT p FROM Producto p WHERE LOWER(p.nombre) = :name",
                     Producto.class)
-                    .setParameter("name", name)
+                    .setParameter("name", name.toLowerCase())
                     .getResultList();
             tx.commit();
             return listaProd;

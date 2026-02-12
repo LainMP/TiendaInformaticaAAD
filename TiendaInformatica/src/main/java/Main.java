@@ -178,7 +178,7 @@ public class Main {
      * */
     private static  void prodsByFab() {
         System.out.println("Introduce el nombre del Fabricante para listar productos: ");
-        String name = sc.nextLine();
+        String name = sc.nextLine().trim().toLowerCase();
         if (name.isEmpty()) {
             System.out.println("Nombre del Fabricante no puede estar vacio.");
             return;
@@ -199,7 +199,7 @@ public class Main {
      * */
     private static void fabByProduct(){
         System.out.println("Introduce el nombre del Producto: ");
-        String name = sc.nextLine();
+        String name = sc.nextLine().trim().toLowerCase();
         if (name.isEmpty()) {
             System.out.println("Nombre del Producto no puede estar vacio.");
             return;
@@ -222,7 +222,7 @@ public class Main {
      * */
     private static void fabByName() {
         System.out.println("Introduce el nombre del Fabricante a buscar: ");
-        String name = sc.nextLine();
+        String name = sc.nextLine().trim().toLowerCase();
         if (name.isEmpty()) {
             System.out.println("Nombre del Fabricante no puede estar vacio.");
             return;
@@ -248,7 +248,7 @@ public class Main {
      * */
     private static void crearFabricante(){
         System.out.println("Introduce el nombre del Fabricante: ");
-        String nombre = sc.nextLine().trim();
+        String nombre = sc.nextLine().trim().toLowerCase();
 
         if(nombre.isEmpty()){
             System.out.println("El nombre esta vacio");
@@ -271,7 +271,7 @@ public class Main {
         System.out.println("Introduce el id del Fabricante a actualizar: ");
         int id = Integer.parseInt(sc.nextLine());
         System.out.println("Introduce el nuevo nombre del Fabricante: ");
-        String nombre = sc.nextLine();
+        String nombre = sc.nextLine().trim().toLowerCase();
 
         try {
             if(fabricanteDAO.updateFab(id, nombre) == 1) {
@@ -311,7 +311,7 @@ public class Main {
         System.out.println("Introduce el precio del Producto: ");
         double precio = Double.parseDouble(sc.nextLine());
         System.out.println("Introduce el fabricante del Producto (Si no exsiste se creará): ");
-        String fabName = sc.nextLine();
+        String fabName = sc.nextLine().trim().toLowerCase();
         if (nombre.isEmpty()) {
             System.out.println("Nombre del Producto no puede estar vacio.");
             return;
@@ -363,7 +363,7 @@ public class Main {
             return;
         }
         System.out.println("Introduce el nuevo nombre del Producto a actualizar (Pulsa intro para omitir): ");
-        String newName = sc.nextLine();
+        String newName = sc.nextLine().trim().toLowerCase();
         System.out.println("Introduce el nuevo precio del Producto a actualizar (Pulsa intro para omitir): ");
         String newPrecio = sc.nextLine();
         if (!newName.isEmpty()) {
@@ -428,7 +428,7 @@ public class Main {
         }
         try {
             List<Producto> listaProds = productoDAO.searchByName(nombre);
-            if  (listaProds != null) {
+            if  (!listaProds.isEmpty()) {
                 for (Producto producto : listaProds) {
                     System.out.println(producto.getCod() + " - " + producto.getNombre() + " - " + producto.getPrecio());
                 }
