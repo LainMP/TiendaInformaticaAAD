@@ -2,6 +2,7 @@ package dao;
 
 import entity.Fabricante;
 import entity.Producto;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import util.HibernateUtil;
@@ -102,6 +103,26 @@ public class FabricanteDAO {
                     "SELECT f FROM Fabricante f",
                             Fabricante.class)
                             .getResultList();
+        }
+    }
+
+    //Añadido para recuperar el fabricante de la bd y verificar su existencia antes de eliminarlo.
+    public Fabricante findById(int id) {
+        Transaction tx = null;
+        Fabricante fabricante = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            fabricante = (Fabricante) session.find(Fabricante.class, id);
+            if (fabricante != null) {
+                Hibernate.initialize(fabricante.getListaProductos());
+            }
+            tx.commit();
+            return fabricante;
+        } catch (Exception ex) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            return null;
         }
     }
 

@@ -103,4 +103,15 @@ public class ProductoDAO {
         }
     }
 
+    public List<Producto> findByMax(double max){
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            List<Producto> listaProd = session.createQuery(
+                    "SELECT p FROM Producto p WHERE p.precio <= :max ORDER BY p.precio ASC",
+                    Producto.class)
+                    .setParameter("max", max)
+                    .getResultList();
+            return listaProd;
+        }
+    }
+
 }
